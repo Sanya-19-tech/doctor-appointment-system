@@ -1,0 +1,34 @@
+<div class="sidebar">
+
+  <!-- LOGO -->
+  <div class="sidebar-logo">
+    <span class="logo-text">Health<span class="logo-accent">.care</span></span>
+  </div>
+
+  <!-- NAV ITEMS -->
+  <nav class="sidebar-nav">
+    <ng-container *ngFor="let item of visibleItems">
+      <a [routerLink]="item.route"
+         routerLinkActive="active"
+         class="nav-item">
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+    </ng-container>
+  </nav>
+
+  <!-- ADMIN SECTION -->
+  <div class="admin-section" *ngIf="isAdmin">
+    <p class="admin-label">ADMIN PANEL</p>
+    <a routerLink="/doctors"
+       routerLinkActive="active"
+       class="nav-item admin-item">
+      <span class="nav-label">Add Doctor</span>
+    </a>
+    <a routerLink="/medicines"
+       routerLinkActive="active"
+       class="nav-item admin-item">
+      <span class="nav-label">Add Medicine</span>
+    </a>
+  </div>
+
+</div>

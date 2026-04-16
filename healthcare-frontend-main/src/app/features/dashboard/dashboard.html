@@ -1,0 +1,118 @@
+<div class="dashboard">
+
+  <!-- ── WELCOME BANNER ──────────────────────────────── -->
+  <div class="welcome-banner">
+    <div class="welcome-text">
+      <h1>Welcome back, {{ userName }}! 👋</h1>
+      <p>Here's what's happening in your healthcare portal today.</p>
+    </div>
+    <div class="welcome-badge" *ngIf="isAdmin">
+      <span class="admin-tag">👑 Admin Access</span>
+    </div>
+  </div>
+
+  <!-- ── LOADING SPINNER ─────────────────────────────── -->
+  <div class="loading-wrapper" *ngIf="isLoading">
+    <div class="spinner-ring"></div>
+    <p>Loading dashboard...</p>
+  </div>
+
+  <!-- ── STAT CARDS ──────────────────────────────────── -->
+  <div class="stats-grid" *ngIf="!isLoading">
+    <div
+      class="stat-card"
+      *ngFor="let card of statCards"
+      [routerLink]="card.route"
+      [style.border-left-color]="card.color">
+
+      <div class="stat-icon"
+           [style.background]="card.bgColor"
+           [style.color]="card.color">
+        {{ card.icon }}
+      </div>
+
+      <div class="stat-info">
+        <p class="stat-title">{{ card.title }}</p>
+        <h2 class="stat-value" [style.color]="card.color">
+          {{ card.value }}
+        </h2>
+      </div>
+
+      <div class="stat-arrow">→</div>
+    </div>
+  </div>
+
+  <!-- ── RECENT PATIENTS TABLE ───────────────────────── -->
+  <div class="section-card" *ngIf="!isLoading">
+    <div class="section-header">
+      <h3>Recent Patients</h3>
+      <a routerLink="/patients" class="view-all-btn">View All →</a>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="recentPatients.length === 0">
+      <p>🏥 No patients found yet.</p>
+      <a routerLink="/patients" *ngIf="isAdmin" class="add-link">
+        + Add First Patient
+      </a>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper" *ngIf="recentPatients.length > 0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Contact</th>
+            <th>Medical History</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of recentPatients; let i = index">
+            <td>
+              <div class="avatar-cell">
+                {{ p.name.charAt(0).toUpperCase() }}
+              </div>
+            </td>
+            <td class="name-cell">{{ p.name }}</td>
+            <td>{{ p.age }} yrs</td>
+            <td>{{ p.contact }}</td>
+            <td>
+              <span class="history-text">
+                {{ p.medicalHistory || 'None' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-success">Active</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── QUICK ACTIONS (Admin Only) ──────────────────── -->
+  <div class="section-card quick-actions" *ngIf="!isLoading && isAdmin">
+    <div class="section-header">
+      <h3>Quick Actions</h3>
+    </div>
+    <div class="actions-grid">
+      <a routerLink="/patients" class="action-btn blue">
+        <span>➕</span> Add Patient
+      </a>
+      <a routerLink="/doctors" class="action-btn green">
+        <span>➕</span> Add Doctor
+      </a>
+      <a routerLink="/medicines" class="action-btn purple">
+        <span>➕</span> Add Medicine
+      </a>
+      <a routerLink="/appointments" class="action-btn orange">
+        <span>📅</span> Book Appointment
+      </a>
+    </div>
+  </div>
+
+</div>

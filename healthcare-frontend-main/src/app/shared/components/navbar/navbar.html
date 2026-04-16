@@ -1,0 +1,34 @@
+<header class="navbar">
+
+  <!-- LEFT -->
+  <div class="navbar-left">
+    <h2 class="page-title">Healthcare Portal</h2>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="navbar-right">
+
+    <!-- Cart Icon -->
+    <a routerLink="/orders" class="cart-icon-btn">
+      🛒
+      <span class="cart-dot" *ngIf="cartCount > 0">{{ cartCount }}</span>
+    </a>
+
+    <!-- Role Badge -->
+    <span class="role-badge" [class.admin-badge]="isAdmin">
+      {{ userRole }}
+    </span>
+
+    <!-- User Info -->
+    <div class="user-info">
+      <div class="avatar">{{ userName.charAt(0).toUpperCase() }}</div>
+      <span class="user-name">{{ userName }}</span>
+    </div>
+
+    <!-- Logout -->
+    <button class="logout-btn" (click)="logout()">
+      🚪 Logout
+    </button>
+
+  </div>
+</header>

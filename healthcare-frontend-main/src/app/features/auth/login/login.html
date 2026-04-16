@@ -1,0 +1,124 @@
+<div class="auth-wrapper">
+
+  <!-- ── LEFT PANEL ─────────────────────────────── -->
+  <div class="left-panel">
+    <div class="left-content">
+
+      <div class="brand">
+        <span class="brand-icon">🏥</span>
+        <span class="brand-name">Health<span>.care</span></span>
+      </div>
+
+      <div class="illustration">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+        <div class="illus-card">
+          <div class="illus-icon">🩺</div>
+          <p class="illus-title">Smart Healthcare</p>
+          <p class="illus-sub">Manage patients, doctors & appointments in one place</p>
+        </div>
+      </div>
+
+      <div class="features">
+        <div class="feature-item">
+          <span class="f-icon">✅</span>
+          <span>Role-based access control</span>
+        </div>
+        <div class="feature-item">
+          <span class="f-icon">✅</span>
+          <span>Secure JWT Authentication</span>
+        </div>
+        <div class="feature-item">
+          <span class="f-icon">✅</span>
+          <span>Real-time appointment booking</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── RIGHT PANEL ────────────────────────────── -->
+  <div class="right-panel">
+    <div class="form-card">
+
+      <!-- Header -->
+      <div class="form-header">
+        <h1>Welcome Back!</h1>
+        <p>Sign in to your account to continue</p>
+      </div>
+
+      <!-- Error Message -->
+      <div class="error-alert" *ngIf="errorMsg">
+        <span>⚠️</span> {{ errorMsg }}
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrapper">
+            <span class="input-icon">📧</span>
+            <input
+              type="email"
+              formControlName="email"
+              placeholder="you@example.com"
+              class="form-input"
+              [class.input-error]="email?.invalid && email?.touched" />
+          </div>
+          <span class="validation-msg"
+            *ngIf="email?.invalid && email?.touched">
+            <ng-container *ngIf="email?.errors?.['required']">
+              Email is required
+            </ng-container>
+            <ng-container *ngIf="email?.errors?.['email']">
+              Enter a valid email address
+            </ng-container>
+          </span>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input
+              [type]="showPass ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Enter your password"
+              class="form-input"
+              [class.input-error]="password?.invalid && password?.touched" />
+            <span class="toggle-pass" (click)="togglePassword()">
+              {{ showPass ? '🙈' : '👁️' }}
+            </span>
+          </div>
+          <span class="validation-msg"
+            *ngIf="password?.invalid && password?.touched">
+            Password must be at least 4 characters
+          </span>
+        </div>
+
+        <!-- Submit -->
+        <button
+          type="submit"
+          class="submit-btn"
+          [disabled]="isLoading">
+          <span *ngIf="!isLoading">🔓 Sign In</span>
+          <span *ngIf="isLoading" class="spinner">⏳ Signing in...</span>
+        </button>
+
+      </form>
+
+      <!-- Footer -->
+      <div class="form-footer">
+        <p>Don't have an account?
+          <a routerLink="/register" class="link">Create one here</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>

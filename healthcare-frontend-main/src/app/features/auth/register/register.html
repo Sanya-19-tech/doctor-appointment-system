@@ -1,0 +1,123 @@
+<div class="auth-wrapper">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="left-content">
+      <div class="brand">
+        <span class="brand-name">Health<span>.care</span></span>
+      </div>
+      <div class="welcome-box">
+        <p class="welcome-title">Join Our Platform</p>
+        <p class="welcome-sub">
+          Create your account and start managing healthcare efficiently
+        </p>
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">1</span>
+            <span>Create your account</span>
+          </div>
+          <div class="step">
+            <span class="step-num">2</span>
+            <span>Login securely</span>
+          </div>
+          <div class="step">
+            <span class="step-num">3</span>
+            <span>Manage your healthcare</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="form-card">
+
+      <div class="form-header">
+        <h1>Create Account</h1>
+        <p>Fill in the details below to get started</p>
+      </div>
+
+      <!-- Alerts -->
+      <div class="error-alert" *ngIf="errorMsg">
+        <span>⚠️</span> {{ errorMsg }}
+      </div>
+      <div class="success-alert" *ngIf="successMsg">
+        <span>✅</span> {{ successMsg }}
+      </div>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+
+        <!-- Name -->
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input
+              type="text"
+              formControlName="name"
+              placeholder="Enter your full name"
+              class="form-input"
+              [class.input-error]="name?.invalid && name?.touched" />
+          </div>
+          <span class="validation-msg" *ngIf="name?.invalid && name?.touched">
+            Name must be at least 2 characters
+          </span>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrapper">
+            <span class="input-icon">📧</span>
+            <input
+              type="email"
+              formControlName="email"
+              placeholder="you@example.com"
+              class="form-input"
+              [class.input-error]="email?.invalid && email?.touched" />
+          </div>
+          <span class="validation-msg" *ngIf="email?.invalid && email?.touched">
+            <ng-container *ngIf="email?.errors?.['required']">Email is required</ng-container>
+            <ng-container *ngIf="email?.errors?.['email']">Enter a valid email</ng-container>
+          </span>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input
+              [type]="showPass ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Min 6 characters"
+              class="form-input"
+              [class.input-error]="password?.invalid && password?.touched" />
+            <span class="toggle-pass" (click)="togglePassword()">
+              {{ showPass ? '🙈' : '👁️' }}
+            </span>
+          </div>
+          <span class="validation-msg" *ngIf="password?.invalid && password?.touched">
+            Password must be at least 6 characters
+          </span>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          <span *ngIf="!isLoading">🚀 Create Account</span>
+          <span *ngIf="isLoading">⏳ Creating account...</span>
+        </button>
+
+      </form>
+
+      <div class="form-footer">
+        <p>Already have an account?
+          <a routerLink="/login" class="link">Sign in here</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>

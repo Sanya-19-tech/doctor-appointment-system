@@ -1,0 +1,243 @@
+<div class="orders-page">
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- ── ORDER SUCCESS SCREEN ─────────────────────────── -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="success-screen" *ngIf="orderSuccess">
+
+    <div class="success-animation">
+      <div class="success-ring ring-1"></div>
+      <div class="success-ring ring-2"></div>
+      <div class="success-ring ring-3"></div>
+      <div class="success-check">✅</div>
+    </div>
+
+    <h1 class="success-title">Order Placed Successfully!</h1>
+    <p class="success-sub">
+      Your order
+      <strong *ngIf="orderId">#{{ orderId }}</strong>
+      has been confirmed and is being processed.
+    </p>
+
+    <div class="success-details">
+      <div class="detail-row">
+        <span>Status</span>
+        <span class="badge badge-warning">⏳ Pending</span>
+      </div>
+      <div class="detail-row">
+        <span>Payment</span>
+        <span class="badge badge-info">💳 On Delivery</span>
+      </div>
+    </div>
+
+    <div class="success-actions">
+      <a routerLink="/medicines" class="btn-shop">
+        💊 Continue Shopping
+      </a>
+      <button class="btn-new-order" (click)="resetOrder()">
+        ➕ New Order
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- ── MAIN CART VIEW ────────────────────────────────── -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="!orderSuccess">
+
+    <!-- ── PAGE HEADER ──────────────────────────────── -->
+    <div class="page-header">
+      <div class="header-left">
+        <h1>🛒 My Cart</h1>
+        <p class="subtitle">Review your selected medicines</p>
+      </div>
+      <div class="header-right" *ngIf="cartItems().length > 0">
+        <button class="btn-clear" (click)="clearCart()">
+          🗑️ Clear Cart
+        </button>
+        <a routerLink="/medicines" class="btn-back">
+          ← Continue Shopping
+        </a>
+      </div>
+    </div>
+
+    <!-- ── ERROR ALERT ───────────────────────────────── -->
+    <div class="alert alert-error" *ngIf="errorMsg">
+      ⚠️ {{ errorMsg }}
+    </div>
+
+    <!-- ── EMPTY CART ────────────────────────────────── -->
+    <div class="empty-cart" *ngIf="cartItems().length === 0">
+      <div class="empty-cart-illustration">
+        <div class="empty-cart-icon">🛒</div>
+        <div class="empty-lines">
+          <div class="empty-line"></div>
+          <div class="empty-line short"></div>
+          <div class="empty-line"></div>
+        </div>
+      </div>
+      <h2>Your Cart is Empty</h2>
+      <p>Add medicines from the pharmacy to get started</p>
+      <a routerLink="/medicines" class="btn-browse">
+        💊 Browse Medicines
+      </a>
+    </div>
+
+    <!-- ── CART CONTENT ──────────────────────────────── -->
+    <div class="cart-layout" *ngIf="cartItems().length > 0">
+
+      <!-- ── LEFT: CART ITEMS TABLE ─────────────────── -->
+      <div class="cart-left">
+
+        <div class="cart-table-header">
+          <span class="col-product">Product</span>
+          <span class="col-price">Unit Price</span>
+          <span class="col-qty">Quantity</span>
+          <span class="col-total">Total</span>
+          <span class="col-remove"></span>
+        </div>
+
+        <!-- Cart Item Row -->
+        <div class="cart-item"
+          *ngFor="let item of cartItems()">
+
+          <!-- Medicine Icon + Name -->
+          <div class="col-product">
+            <div class="item-icon">💊</div>
+            <div class="item-details">
+              <p class="item-name">{{ item.medicine.name }}</p>
+              <span class="item-cat">Medicine ID: {{ item.medicine.id }}</span>
+            </div>
+          </div>
+
+          <!-- Unit Price -->
+          <div class="col-price">
+            <span class="unit-price">₹{{ item.medicine.price }}</span>
+          </div>
+
+          <!-- Quantity Controls -->
+          <div class="col-qty">
+            <div class="qty-control">
+              <button class="qty-btn"
+                (click)="decrement(item.medicine.id, item.quantity)">
+                −
+              </button>
+              <span class="qty-value">{{ item.quantity }}</span>
+              <button class="qty-btn"
+                (click)="increment(item.medicine.id, item.quantity)"
+                [disabled]="item.quantity >= item.medicine.stock">
+                +
+              </button>
+            </div>
+            <span class="stock-hint">
+              Max: {{ item.medicine.stock }}
+            </span>
+          </div>
+
+          <!-- Item Total -->
+          <div class="col-total">
+            <span class="item-total">
+              ₹{{ getItemTotal(item) }}
+            </span>
+          </div>
+
+          <!-- Remove -->
+          <div class="col-remove">
+            <button class="remove-btn"
+              (click)="removeItem(item.medicine.id)"
+              title="Remove item">
+              ✕
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ── RIGHT: ORDER SUMMARY ───────────────────── -->
+      <div class="cart-right">
+
+        <div class="summary-card">
+          <h3 class="summary-title">Order Summary</h3>
+
+          <!-- Item Count -->
+          <div class="summary-row">
+            <span>Items</span>
+            <span>{{ totalItems() }}</span>
+          </div>
+
+          <!-- Per-item breakdown -->
+          <div class="summary-breakdown">
+            <div class="breakdown-item"
+              *ngFor="let item of cartItems()">
+              <span class="b-name">
+                {{ item.medicine.name }}
+                <em>x{{ item.quantity }}</em>
+              </span>
+              <span class="b-price">₹{{ getItemTotal(item) }}</span>
+            </div>
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <!-- Subtotal -->
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>₹{{ totalAmount() }}</span>
+          </div>
+
+          <!-- Delivery -->
+          <div class="summary-row">
+            <span>Delivery</span>
+            <span class="free-delivery">FREE</span>
+          </div>
+
+          <!-- Discount -->
+          <div class="summary-row">
+            <span>Discount</span>
+            <span>₹0.00</span>
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <!-- Grand Total -->
+          <div class="summary-row total-row">
+            <span>Total Amount</span>
+            <span class="grand-total">₹{{ totalAmount() }}</span>
+          </div>
+
+          <!-- Place Order Button -->
+          <button
+            class="place-order-btn"
+            (click)="placeOrder()"
+            [disabled]="isPlacing || cartItems().length === 0">
+            <span *ngIf="!isPlacing">
+              🛒 Place Order — ₹{{ totalAmount() }}
+            </span>
+            <span *ngIf="isPlacing" class="placing-text">
+              <span class="btn-spinner"></span>
+              Placing Order...
+            </span>
+          </button>
+
+          <!-- Safety Note -->
+          <div class="safety-note">
+            <span>🔒</span>
+            <span>Secure checkout — Pay on delivery</span>
+          </div>
+
+        </div>
+
+        <!-- Back to Shop -->
+        <a routerLink="/medicines" class="back-to-shop">
+          ← Back to Medicines
+        </a>
+
+      </div>
+
+    </div>
+
+  </ng-container>
+
+</div>

@@ -1,0 +1,208 @@
+<div class="doctors-page">
+
+  <!-- ── PAGE HEADER ──────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>👨‍⚕️ Doctors</h1>
+      <p class="subtitle">Our medical specialists team</p>
+    </div>
+    <button class="btn-primary" *ngIf="isAdmin" (click)="openAddModal()">
+      ➕ Add Doctor
+    </button>
+  </div>
+
+  <!-- ── ALERTS ───────────────────────────────────────── -->
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg && !showModal">{{ errorMsg }}</div>
+
+  <!-- ── SEARCH ───────────────────────────────────────── -->
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input
+      type="text"
+      placeholder="Search by name or specialization..."
+      (input)="onSearch($event)"
+      class="search-input" />
+    <span class="results-count" *ngIf="searchTerm">
+      {{ filteredDoctors.length }} result(s)
+    </span>
+  </div>
+
+  <!-- ── LOADING ───────────────────────────────────────── -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner-ring"></div>
+    <p>Loading doctors...</p>
+  </div>
+
+  <!-- ── EMPTY STATE ───────────────────────────────────── -->
+  <div class="empty-state" *ngIf="!isLoading && filteredDoctors.length === 0">
+    <div class="empty-icon">👨‍⚕️</div>
+    <h3>No Doctors Found</h3>
+    <p *ngIf="!searchTerm">No doctors have been added yet.</p>
+    <p *ngIf="searchTerm">No results for "{{ searchTerm }}"</p>
+    <button class="btn-primary" *ngIf="isAdmin && !searchTerm"
+      (click)="openAddModal()">
+      ➕ Add First Doctor
+    </button>
+  </div>
+
+  <!-- ── DOCTOR CARDS GRID ─────────────────────────────── -->
+  <div class="cards-grid" *ngIf="!isLoading && filteredDoctors.length > 0">
+
+    <div
+      class="doctor-card"
+      *ngFor="let doctor of filteredDoctors; let i = index">
+
+      <!-- Hanging Ring -->
+      <div class="card-ring"
+        [style.border-color]="getColor(i).ring"
+        [style.box-shadow]="'0 0 0 3px ' + getColor(i).light">
+      </div>
+
+      <!-- Hanging String -->
+      <div class="card-string"></div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+
+        <!-- Doctor Avatar -->
+        <div class="doctor-avatar"
+          [style.background]="'linear-gradient(135deg,' + getColor(i).ring + ',' + getColor(i).light + ')'">
+          <span class="avatar-initials"
+            [style.color]="getColor(i).text">
+            {{ getInitials(doctor.name) }}
+          </span>
+        </div>
+
+        <!-- Divider Line -->
+        <div class="card-divider"
+          [style.background]="getColor(i).ring">
+        </div>
+
+        <!-- Doctor Info -->
+        <div class="doctor-info">
+          <h3 class="doctor-name">{{ doctor.name }}</h3>
+
+          <div class="spec-badge"
+            [style.background]="getColor(i).light"
+            [style.color]="getColor(i).text">
+            {{ doctor.specialization }}
+          </div>
+
+          <p class="doctor-id">ID: {{ doctor.id }}</p>
+        </div>
+
+        <!-- Admin Actions -->
+        <div class="card-actions" *ngIf="isAdmin">
+          <button class="card-btn edit-btn"
+            (click)="openEditModal(doctor)">
+            ✏️ Edit
+          </button>
+          <button class="card-btn delete-btn"
+            (click)="confirmDelete(doctor)">
+            🗑️
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Total Count -->
+  <div class="total-count" *ngIf="!isLoading && filteredDoctors.length > 0">
+    Showing <strong>{{ filteredDoctors.length }}</strong> doctor(s)
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- ── ADD / EDIT MODAL ──────────────────────────────── -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2>{{ isEditMode ? '✏️ Edit Doctor' : '➕ Add New Doctor' }}</h2>
+      <button class="modal-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <form [formGroup]="doctorForm" (ngSubmit)="onSubmit()" novalidate>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label>Doctor Name <span class="required">*</span></label>
+        <input
+          type="text"
+          formControlName="name"
+          placeholder="e.g. Dr. Sharma"
+          class="form-input"
+          [class.input-error]="name?.invalid && name?.touched" />
+        <span class="val-msg" *ngIf="name?.invalid && name?.touched">
+          Name must be at least 2 characters
+        </span>
+      </div>
+
+      <!-- Specialization -->
+      <div class="form-group">
+        <label>Specialization <span class="required">*</span></label>
+        <input
+          type="text"
+          formControlName="specialization"
+          placeholder="e.g. Cardiologist, Neurologist..."
+          class="form-input"
+          [class.input-error]="specialization?.invalid && specialization?.touched" />
+        <span class="val-msg"
+          *ngIf="specialization?.invalid && specialization?.touched">
+          Specialization is required
+        </span>
+      </div>
+
+      <!-- Quick Specialization Chips -->
+      <div class="spec-chips">
+        <span class="spec-hint">Quick select:</span>
+        <button type="button" class="chip"
+          *ngFor="let spec of ['Cardiologist','Neurologist',
+            'Orthopedic','Dermatologist','Pediatrician','Dentist']"
+          (click)="doctorForm.patchValue({ specialization: spec })">
+          {{ spec }}
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="closeModal()">
+          Cancel
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="modalLoading">
+          <span *ngIf="!modalLoading">
+            {{ isEditMode ? '💾 Update Doctor' : '➕ Add Doctor' }}
+          </span>
+          <span *ngIf="modalLoading">⏳ Saving...</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- ── DELETE CONFIRM ────────────────────────────────── -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm">
+  <div class="modal-box confirm-box">
+    <div class="confirm-icon">🗑️</div>
+    <h2>Remove Doctor?</h2>
+    <p>Are you sure you want to remove
+      <strong>{{ deletingName }}</strong>?
+      This cannot be undone.
+    </p>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+      <button class="btn-delete-confirm" (click)="executeDelete()">
+        Yes, Remove
+      </button>
+    </div>
+  </div>
+</div>

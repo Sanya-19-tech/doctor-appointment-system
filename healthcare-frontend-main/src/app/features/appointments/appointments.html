@@ -1,0 +1,290 @@
+<div class="appointments-page">
+
+  <!-- ── PAGE HEADER ──────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>📅 Appointments</h1>
+      <p class="subtitle">Book and manage patient appointments</p>
+    </div>
+  </div>
+
+  <!-- ── ALERTS ───────────────────────────────────────── -->
+  <div class="alert alert-success" *ngIf="successMsg && !showConfetti">
+    ✅ {{ successMsg }}
+  </div>
+  <div class="alert alert-error" *ngIf="errorMsg && activeTab === 'list'">
+    ⚠️ {{ errorMsg }}
+  </div>
+
+  <!-- ── CONFETTI SUCCESS CARD ─────────────────────────── -->
+  <div class="confetti-card" *ngIf="showConfetti">
+    <div class="confetti-dots">
+      <span *ngFor="let d of [1,2,3,4,5,6,7,8]" class="dot"></span>
+    </div>
+    <div class="congrats-icon">🎉</div>
+    <h2>Congrats!</h2>
+    <p>You have successfully booked an appointment!</p>
+  </div>
+
+  <!-- ── TAB SWITCHER ─────────────────────────────────── -->
+  <div class="tab-bar">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'list'"
+      (click)="switchTab('list')">
+      📋 All Appointments
+      <span class="tab-count">{{ appointments.length }}</span>
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'book'"
+      (click)="switchTab('book')">
+      ➕ Book Appointment
+    </button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- ── LIST TAB ──────────────────────────────────────── -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'list'">
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner-ring"></div>
+      <p>Loading appointments...</p>
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-state" *ngIf="!isLoading && appointments.length === 0">
+      <div class="empty-icon">📅</div>
+      <h3>No Appointments Yet</h3>
+      <p>Click "Book Appointment" to schedule the first one.</p>
+      <button class="btn-primary" (click)="switchTab('book')">
+        ➕ Book Now
+      </button>
+    </div>
+
+    <!-- Appointments Table -->
+    <div class="table-card" *ngIf="!isLoading && appointments.length > 0">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th *ngIf="isAdmin">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let appt of appointments; let i = index">
+
+              <td>
+                <span class="row-num">{{ i + 1 }}</span>
+              </td>
+
+              <!-- Patient -->
+              <td>
+                <div class="person-cell">
+                  <div class="mini-avatar blue">
+                    {{ (appt.patient?.name || getPatientName(appt.patientId)).charAt(0) }}
+                  </div>
+                  <span>{{ appt.patient?.name || getPatientName(appt.patientId) }}</span>
+                </div>
+              </td>
+
+              <!-- Doctor -->
+              <td>
+                <div class="person-cell">
+                  <div class="mini-avatar green">
+                    {{ (appt.doctor?.name || getDoctorName(appt.doctorId)).charAt(0) }}
+                  </div>
+                  <span>{{ appt.doctor?.name || getDoctorName(appt.doctorId) }}</span>
+                </div>
+              </td>
+
+              <td>
+                <div class="date-cell">
+                  <span class="date-icon">📆</span>
+                  {{ formatDate(appt.appointmentDate) }}
+                </div>
+              </td>
+
+              <td>
+                <span class="time-chip">
+                  🕐 {{ formatTime(appt.appointmentDate) }}
+                </span>
+              </td>
+
+              <td>
+                <span class="badge badge-success">Confirmed</span>
+              </td>
+
+              <td *ngIf="isAdmin">
+                <button class="btn-cancel-appt"
+                  (click)="confirmDelete(appt.id)">
+                  ✕ Cancel
+                </button>
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        Total: <strong>{{ appointments.length }}</strong> appointment(s)
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- ── BOOK TAB ──────────────────────────────────────── -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'book'">
+    <div class="booking-card">
+
+      <div class="booking-title">
+        <h2>Make an Appointment</h2>
+        <p>Fill in the details below to schedule a visit</p>
+      </div>
+
+      <!-- Error inside book tab -->
+      <div class="alert alert-error" *ngIf="errorMsg">
+        ⚠️ {{ errorMsg }}
+      </div>
+
+      <form [formGroup]="appointmentForm"
+            (ngSubmit)="onSubmit()" novalidate>
+
+        <div class="booking-grid">
+
+          <!-- ── LEFT COLUMN ───────────────────────── -->
+          <div class="booking-left">
+
+            <!-- Patient Dropdown -->
+            <div class="form-group">
+              <label>Select Patient <span class="required">*</span></label>
+              <div class="select-wrapper">
+                <select formControlName="patientId"
+                  class="form-select"
+                  [class.input-error]="patientId?.invalid && patientId?.touched">
+                  <option value="">-- Choose Patient --</option>
+                  <option *ngFor="let p of patients" [value]="p.id">
+                    {{ p.name }} (Age: {{ p.age }})
+                  </option>
+                </select>
+                <span class="select-arrow">▾</span>
+              </div>
+              <span class="val-msg"
+                *ngIf="patientId?.invalid && patientId?.touched">
+                Please select a patient
+              </span>
+            </div>
+
+            <!-- Doctor Dropdown -->
+            <div class="form-group">
+              <label>Select Doctor <span class="required">*</span></label>
+              <div class="select-wrapper">
+                <select formControlName="doctorId"
+                  class="form-select"
+                  [class.input-error]="doctorId?.invalid && doctorId?.touched">
+                  <option value="">-- Choose Doctor --</option>
+                  <option *ngFor="let d of doctors" [value]="d.id">
+                    {{ d.name }} — {{ d.specialization }}
+                  </option>
+                </select>
+                <span class="select-arrow">▾</span>
+              </div>
+              <span class="val-msg"
+                *ngIf="doctorId?.invalid && doctorId?.touched">
+                Please select a doctor
+              </span>
+            </div>
+
+            <!-- Date Picker -->
+            <div class="form-group">
+              <label>Select Date <span class="required">*</span></label>
+              <input
+                type="date"
+                formControlName="appointmentDate"
+                class="form-input"
+                [min]="minDate"
+                [class.input-error]="apptDate?.invalid && apptDate?.touched" />
+              <span class="val-msg"
+                *ngIf="apptDate?.invalid && apptDate?.touched">
+                Please pick a date
+              </span>
+            </div>
+
+          </div>
+
+          <!-- ── RIGHT COLUMN ──────────────────────── -->
+          <div class="booking-right">
+
+            <label class="slot-label">
+              Select Time Slot <span class="required">*</span>
+            </label>
+
+            <!-- Time Slots Grid -->
+            <div class="time-slots-grid">
+              <button
+                type="button"
+                class="time-slot"
+                *ngFor="let slot of timeSlots"
+                [class.selected]="selectedTime === slot"
+                (click)="selectTime(slot)">
+                {{ slot }}
+              </button>
+            </div>
+
+            <!-- Selected Time Display -->
+            <div class="selected-time-display" *ngIf="selectedTime">
+              <span class="check-icon">✅</span>
+              Selected: <strong>{{ selectedTime }}</strong>
+            </div>
+
+            <div class="timezone-note">
+              🕐 All times are in Indian Standard Time (IST)
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Submit -->
+        <div class="form-actions">
+          <button type="button" class="btn-cancel"
+            (click)="switchTab('list')">
+            ← Back to List
+          </button>
+          <button type="submit" class="btn-book">
+            📅 Get Appointment
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </ng-container>
+
+</div>
+
+<!-- ── DELETE CONFIRM MODAL ──────────────────────────── -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm">
+  <div class="modal-box confirm-box">
+    <div class="confirm-icon">🗑️</div>
+    <h2>Cancel Appointment?</h2>
+    <p>This appointment will be permanently removed.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel-modal" (click)="cancelDelete()">
+        Keep It
+      </button>
+      <button class="btn-delete-confirm" (click)="executeDelete()">
+        Yes, Cancel It
+      </button>
+    </div>
+  </div>
+</div>

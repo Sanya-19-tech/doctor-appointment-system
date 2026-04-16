@@ -1,0 +1,283 @@
+<div class="medicines-page">
+
+  <!-- ── PAGE HEADER ──────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>💊 Medicines</h1>
+      <p class="subtitle">Browse and order from our pharmacy</p>
+    </div>
+    <div class="header-right">
+      <!-- Cart Button -->
+      <a routerLink="/orders" class="cart-btn">
+        🛒 Cart
+        <span class="cart-badge" *ngIf="totalInCart() > 0">
+          {{ totalInCart() }}
+        </span>
+      </a>
+      <!-- Admin Add -->
+      <button class="btn-primary" *ngIf="isAdmin" (click)="openAddModal()">
+        ➕ Add Medicine
+      </button>
+    </div>
+  </div>
+
+  <!-- ── ALERTS ───────────────────────────────────────── -->
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"
+    *ngIf="errorMsg && !showModal && !showDeleteConfirm">
+    {{ errorMsg }}
+  </div>
+
+  <!-- ── SEARCH + FILTER BAR ──────────────────────────── -->
+  <div class="filter-bar">
+    <!-- Search -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        placeholder="Search medicines..."
+        (input)="onSearch($event)"
+        class="search-input" />
+    </div>
+
+    <!-- Category Chips -->
+    <div class="category-chips">
+      <button
+        *ngFor="let cat of categories"
+        class="cat-chip"
+        [class.active]="activeCategory === cat"
+        (click)="setCategory(cat)">
+        {{ cat }}
+      </button>
+    </div>
+  </div>
+
+  <!-- ── LOADING ───────────────────────────────────────── -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner-ring"></div>
+    <p>Loading medicines...</p>
+  </div>
+
+  <!-- ── EMPTY STATE ───────────────────────────────────── -->
+  <div class="empty-state"
+    *ngIf="!isLoading && filteredMedicines.length === 0">
+    <div class="empty-icon">💊</div>
+    <h3>No Medicines Found</h3>
+    <p *ngIf="!searchTerm && activeCategory === 'All'">
+      No medicines have been added yet.
+    </p>
+    <p *ngIf="searchTerm || activeCategory !== 'All'">
+      No results for current filter.
+    </p>
+    <button class="btn-primary"
+      *ngIf="isAdmin && !searchTerm && activeCategory === 'All'"
+      (click)="openAddModal()">
+      ➕ Add First Medicine
+    </button>
+  </div>
+
+  <!-- ── MEDICINE CARDS GRID ───────────────────────────── -->
+  <div class="medicines-grid"
+    *ngIf="!isLoading && filteredMedicines.length > 0">
+
+    <div class="medicine-card"
+      *ngFor="let med of filteredMedicines"
+      [class.out-of-stock]="med.stock === 0">
+
+      <!-- Stock Badge -->
+      <div class="stock-badge"
+        [class.in-stock]="getStockStatus(med.stock) === 'in-stock'"
+        [class.low-stock]="getStockStatus(med.stock) === 'low-stock'"
+        [class.out-of-stock-badge]="getStockStatus(med.stock) === 'out-of-stock'">
+        {{ getStockLabel(med.stock) }}
+      </div>
+
+      <!-- Medicine Icon -->
+      <div class="medicine-icon-wrap">
+        <div class="medicine-icon">💊</div>
+      </div>
+
+      <!-- Medicine Info -->
+      <div class="medicine-info">
+        <h3 class="medicine-name">{{ med.name }}</h3>
+
+        <span class="category-tag">{{ med.category }}</span>
+
+        <div class="price-row">
+          <span class="price-label">Price</span>
+          <span class="price-value">₹{{ med.price }}</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Cart Action -->
+        <div class="card-footer">
+
+          <ng-container *ngIf="med.stock > 0; else outOfStockTpl">
+
+            <!-- Already in cart indicator -->
+            <div class="in-cart-info" *ngIf="isInCart(med.id)">
+              <span class="in-cart-label">
+                ✅ {{ getCartQty(med.id) }} in cart
+              </span>
+            </div>
+
+            <!-- Add to Cart / Added feedback -->
+            <button
+              class="add-to-cart-btn"
+              [class.added]="addedToCartId === med.id"
+              (click)="addToCart(med)">
+              <span *ngIf="addedToCartId !== med.id">
+                🛒 {{ isInCart(med.id) ? 'Add More' : 'Add to Cart' }}
+              </span>
+              <span *ngIf="addedToCartId === med.id">
+                ✅ Added!
+              </span>
+            </button>
+
+          </ng-container>
+
+          <ng-template #outOfStockTpl>
+            <button class="add-to-cart-btn disabled" disabled>
+              ❌ Out of Stock
+            </button>
+          </ng-template>
+
+        </div>
+
+        <!-- Admin Actions -->
+        <div class="admin-actions" *ngIf="isAdmin">
+          <button class="btn-edit" (click)="openEditModal(med)">
+            ✏️ Edit
+          </button>
+          <button class="btn-delete" (click)="confirmDelete(med)">
+            🗑️ Delete
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Results Count -->
+  <div class="results-info"
+    *ngIf="!isLoading && filteredMedicines.length > 0">
+    Showing <strong>{{ filteredMedicines.length }}</strong>
+    of <strong>{{ medicines.length }}</strong> medicines
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- ── ADD / EDIT MODAL ──────────────────────────────── -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2>{{ isEditMode ? '✏️ Edit Medicine' : '➕ Add Medicine' }}</h2>
+      <button class="modal-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <form [formGroup]="medicineForm" (ngSubmit)="onSubmit()" novalidate>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label>Medicine Name <span class="required">*</span></label>
+        <input type="text" formControlName="name"
+          placeholder="e.g. Paracetamol"
+          class="form-input"
+          [class.input-error]="name?.invalid && name?.touched" />
+        <span class="val-msg" *ngIf="name?.invalid && name?.touched">
+          Name must be at least 2 characters
+        </span>
+      </div>
+
+      <!-- Category -->
+      <div class="form-group">
+        <label>Category <span class="required">*</span></label>
+        <input type="text" formControlName="category"
+          placeholder="e.g. Painkiller, Antibiotic..."
+          class="form-input"
+          [class.input-error]="category?.invalid && category?.touched" />
+        <!-- Quick category chips -->
+        <div class="quick-cats">
+          <button type="button" class="quick-chip"
+            *ngFor="let c of ['Painkiller','Antibiotic',
+              'Antiviral','Vitamin','Antacid','Antiseptic']"
+            (click)="medicineForm.patchValue({ category: c })">
+            {{ c }}
+          </button>
+        </div>
+        <span class="val-msg"
+          *ngIf="category?.invalid && category?.touched">
+          Category is required
+        </span>
+      </div>
+
+      <!-- Price + Stock Row -->
+      <div class="two-col">
+
+        <div class="form-group">
+          <label>Price (₹) <span class="required">*</span></label>
+          <input type="number" formControlName="price"
+            placeholder="e.g. 50"
+            class="form-input"
+            [class.input-error]="price?.invalid && price?.touched" />
+          <span class="val-msg"
+            *ngIf="price?.invalid && price?.touched">
+            Price must be at least ₹1
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label>Stock Quantity <span class="required">*</span></label>
+          <input type="number" formControlName="stock"
+            placeholder="e.g. 100"
+            class="form-input"
+            [class.input-error]="stock?.invalid && stock?.touched" />
+          <span class="val-msg"
+            *ngIf="stock?.invalid && stock?.touched">
+            Stock must be 0 or more
+          </span>
+        </div>
+
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="closeModal()">
+          Cancel
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="modalLoading">
+          <span *ngIf="!modalLoading">
+            {{ isEditMode ? '💾 Update' : '➕ Add Medicine' }}
+          </span>
+          <span *ngIf="modalLoading">⏳ Saving...</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- ── DELETE CONFIRM ────────────────────────────────── -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm">
+  <div class="modal-box confirm-box">
+    <div class="confirm-icon">🗑️</div>
+    <h2>Delete Medicine?</h2>
+    <p>Remove <strong>{{ deletingName }}</strong> from inventory?
+      This cannot be undone.
+    </p>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+      <button class="btn-delete-confirm" (click)="executeDelete()">
+        Yes, Delete
+      </button>
+    </div>
+  </div>
+</div>
