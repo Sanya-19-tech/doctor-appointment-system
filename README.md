@@ -39,7 +39,7 @@ A full-stack healthcare management system that allows users to book appointments
 
 📁 Project Structure
 ```text
-HealthEase/
+hackathon/
 │
 ├── HealthcareSystem-main/ (Backend)
 │   ├── Controllers/
@@ -129,23 +129,33 @@ npm start
 
 🔑 API Endpoints
 
+**Appointment**
+* `GET /api/Appointment`
+* `POST /api/Appointment`
+
 **Auth**
-* `POST /api/auth/register`
-* `POST /api/auth/login`
+* `POST /api/Auth/register`
+* `POST /api/Auth/login`
+* `GET /api/Auth/secure-data`
 
-**Doctors & Patients**
-* `GET /api/doctor`
-* `POST /api/doctor`
-* `GET /api/patient`
-* `POST /api/patient`
+**Doctor**
+* `GET /api/Doctor`
+* `POST /api/Doctor`
+* `PUT /api/Doctor/{id}`
+* `DELETE /api/Doctor/{id}`
 
-**Appointments**
-* `GET /api/appointment`
-* `POST /api/appointment`
+**Medicine**
+* `GET /api/Medicine`
+* `POST /api/Medicine`
 
-**Medicines & Orders**
-* `GET /api/medicine`
-* `POST /api/order`
+**Order**
+* `POST /api/Order`
+
+**Patient**
+* `GET /api/Patient`
+* `POST /api/Patient`
+* `PUT /api/Patient/{id}`
+* `DELETE /api/Patient/{id}`
 
 🔄 Authentication Flow
 1. User registers/logs in
@@ -170,6 +180,7 @@ npm start
 * Sonal Bansal(Frontend(UI) + API Endpoints Design)
 * Sumit Singh(Backend + Integration)
 * Sarthak Srivastava(DB Design + EF Core(Models))
+
 
 💡 Notes
 * Designed for hackathon scalability
